@@ -1,0 +1,355 @@
+---
+import CompanyIcon from "@/components/lifeline/company-icon.astro";
+import Page from "@/layouts/page.astro";
+import { identity, person } from "@/lib/person";
+import { categories, stack } from "@/lib/stack";
+
+export const prerender = true;
+
+const title = "About";
+const description =
+  "A bit about me — my background, work, projects and the tools I use daily.";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@id": `${identity}/about#webpage`,
+  "@type": "AboutPage",
+  description,
+  mainEntity: person,
+  name: "About Umang Kumar",
+  url: `${identity}/about`,
+};
+
+const LINK = "text-black underline dark:text-white";
+
+const stackSections = categories
+  .map((category) => ({
+    heading: category,
+    items: stack.filter((item) => item.category === category),
+  }))
+  .filter((section) => section.items.length > 0);
+
+// Hidden for now — flip to true to show the Projects section again.
+const SHOW_PROJECTS = false;
+
+const projects = [
+  {
+    description:
+      "A platform where students exchange, borrow and review books — MySQL, Node.js, Express.",
+    name: "Book Exchange Center",
+    url: "https://drive.google.com/file/d/122vEA07__T2WAldwHQdFJ2XJEYJ5Hlu6/view",
+  },
+  {
+    description:
+      "This site — a timeline, a live globe clock and notes on what I build.",
+    name: "umangkumarr.github.io",
+    url: "https://github.com/umangkumarr",
+  },
+];
+
+---
+
+<Page description={description} jsonLd={jsonLd} title={title}>
+  <div class="grid gap-12">
+    <section>
+      <img
+        alt="Umang Kumar"
+        class="float-right mb-4 ml-6 w-36 rounded-lg sm:w-44"
+        height="1024"
+        loading="eager"
+        src="/photo-3x4.jpg"
+        width="768"
+      />
+
+      <div
+        class="space-y-4 text-zinc-600 leading-relaxed transition-colors duration-300 dark:text-zinc-400"
+      >
+        <p>
+          I'm a software development engineer at{" "}
+          <a
+            class={LINK}
+            href="https://www.meesho.io"
+            rel="noopener noreferrer"
+            target="_blank">Meesho</a
+          >, one of India's largest e-commerce platforms, where I build the
+          backend systems behind returns and logistics. Right now that means an
+          event-driven reallocation pipeline moving over a million orders a
+          day, and a dynamic rule engine that lets 25+ teams ship
+          business-logic changes without a deploy.
+        </p>
+        <p>
+          I studied computer science at NIT Delhi, and competitive programming
+          shaped how I think about code — I'm a Guardian on{" "}
+          <a
+            class={LINK}
+            href="https://leetcode.com/hidemysecrets/"
+            rel="noopener noreferrer"
+            target="_blank">LeetCode</a
+          >, an Expert on{" "}
+          <a
+            class={LINK}
+            href="https://codeforces.com/profile/alive"
+            rel="noopener noreferrer"
+            target="_blank">Codeforces</a
+          >, and once cracked the global top 400 in Google Kickstart.
+        </p>
+        <p>
+          I care about systems that stay simple under load — config-driven,
+          idempotent, observable — and code the next person can read. The full
+          story: my work history and the tools I use every day, is below.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid gap-6">
+      <h2 class="font-medium text-lg tracking-tight">Work</h2>
+
+      <div class="grid gap-8 text-sm">
+        <div class="grid gap-4 sm:grid-cols-[48px_1fr]">
+          <div
+            class="flex aspect-square w-12 items-center justify-center rounded-lg border border-zinc-200 transition-colors duration-300 dark:border-zinc-800 sm:w-full"
+          >
+            <CompanyIcon class="scale-150" id="meesho" label="Meesho" />
+          </div>
+          <div class="grid gap-3">
+            <div class="flex items-start justify-between gap-4">
+              <div class="grid">
+                <h3 class="font-medium">Meesho</h3>
+                <p class="text-zinc-500">Software Development Engineer II</p>
+              </div>
+              <span class="shrink-0 text-zinc-500 tabular-nums">
+                Jul 2025 – Present
+              </span>
+            </div>
+            <p
+              class="text-pretty text-zinc-600 leading-relaxed transition-colors duration-300 dark:text-zinc-400"
+            >
+              Designed the Dynamic Rule Engine — a client library with runtime
+              rule evaluation, caching, kill-switches and traffic-level
+              experimentation — enabling zero-deploy business changes, now
+              adopted by 25+ teams. Led 3PL integration and the end-to-end
+              revamp of return reallocation into a config-driven, idempotent,
+              event-based pipeline handling 1M+ orders a day, cutting
+              duplicate actions by 90% and lifting returns pickup by 95%.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-[48px_1fr]">
+          <div
+            class="flex aspect-square w-12 items-center justify-center rounded-lg border border-zinc-200 transition-colors duration-300 dark:border-zinc-800 sm:w-full"
+          >
+            <CompanyIcon class="scale-150" id="meesho" label="Meesho" />
+          </div>
+          <div class="grid gap-3">
+            <div class="flex items-start justify-between gap-4">
+              <div class="grid">
+                <h3 class="font-medium">Meesho</h3>
+                <p class="text-zinc-500">Software Development Engineer I</p>
+              </div>
+              <span class="shrink-0 text-zinc-500 tabular-nums">
+                Jul 2024 – Jun 2025
+              </span>
+            </div>
+            <p
+              class="text-pretty text-zinc-600 leading-relaxed transition-colors duration-300 dark:text-zinc-400"
+            >
+              Owned pre-order guardrails across 520M+ product IDs, designing an
+              incremental, change-only sync strategy that kept pricing-stack
+              latency within SLA. Delivered upfront delivery dates for exchange
+              orders through a low-latency API with graceful fallback, and
+              re-architected the legacy returns approval workflow into a new
+              service with modular boundaries and idempotent processing.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-[48px_1fr]">
+          <div
+            class="flex aspect-square w-12 items-center justify-center rounded-lg border border-zinc-200 transition-colors duration-300 dark:border-zinc-800 sm:w-full"
+          >
+            <CompanyIcon class="scale-150" id="meesho" label="Meesho" />
+          </div>
+          <div class="grid gap-3">
+            <div class="flex items-start justify-between gap-4">
+              <div class="grid">
+                <h3 class="font-medium">Meesho</h3>
+                <p class="text-zinc-500">SDE Intern</p>
+              </div>
+              <span class="shrink-0 text-zinc-500 tabular-nums">
+                Jan 2024 – Jun 2024
+              </span>
+            </div>
+            <p
+              class="text-pretty text-zinc-600 leading-relaxed transition-colors duration-300 dark:text-zinc-400"
+            >
+              Built the branded-packaging relinking feature from scratch — now
+              serving 15% of BP requests — streamlined vendor onboarding to
+              need zero code changes, and raised unit-test coverage by 40%.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-[48px_1fr]">
+          <div
+            class="flex aspect-square w-12 items-center justify-center rounded-lg border border-zinc-200 transition-colors duration-300 dark:border-zinc-800 sm:w-full"
+          >
+            <CompanyIcon class="scale-150" id="k2q" label="K2Q Capital" />
+          </div>
+          <div class="grid gap-3">
+            <div class="flex items-start justify-between gap-4">
+              <div class="grid">
+                <h3 class="font-medium">K2Q Capital</h3>
+                <p class="text-zinc-500">Research & Development Intern</p>
+              </div>
+              <span class="shrink-0 text-zinc-500 tabular-nums">
+                Jun 2023 – Aug 2023
+              </span>
+            </div>
+            <p
+              class="text-pretty text-zinc-600 leading-relaxed transition-colors duration-300 dark:text-zinc-400"
+            >
+              Developed a CNN model predicting future stock performance at 80%
+              accuracy, and built an efficient stock-analysis program for large
+              datasets with customizable plotting.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p
+        class="border-zinc-200 border-t border-dotted pt-6 text-sm text-zinc-600 leading-relaxed transition-colors duration-300 dark:border-zinc-800 dark:text-zinc-400"
+      >
+        Outside work I compete: winner of the{" "}
+        <a
+          class={LINK}
+          href="https://certificate.givemycertificate.com/c/58ff8797-cdc0-4fd4-9d39-a9bfc409f35b"
+          rel="noopener noreferrer"
+          target="_blank">Salesforce Codathon</a
+        >{" "}
+        at Cognizance '21 (IIT Roorkee), finalist at the Bosch-sponsored{" "}
+        <a
+          class={LINK}
+          href="https://www.netcredential.com/verify/nrwrb7f335"
+          rel="noopener noreferrer"
+          target="_blank">Encode '23</a
+        >{" "}
+        (IIT Guwahati), Guardian on LeetCode with a max rating of 2252 and
+        Expert on Codeforces at 1675. There's more on my{" "}
+        <a
+          class={LINK}
+          href="https://www.linkedin.com/in/umangkumarr/"
+          rel="noopener noreferrer"
+          target="_blank">LinkedIn</a
+        >.
+      </p>
+    </section>
+
+    {
+      SHOW_PROJECTS && (
+        <section class="grid gap-4">
+          <h2 class="font-medium text-lg tracking-tight">Projects</h2>
+          <ul class="grid gap-3 text-sm">
+            {projects.map((project) => (
+              <li class="flex items-center justify-between gap-4">
+                <p class="flex min-w-0 items-baseline gap-2 leading-relaxed">
+                  <a
+                    class="font-medium transition-colors duration-300 hover:text-zinc-500"
+                    href={project.url}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {project.name}
+                  </a>
+                  <span class="text-zinc-600 dark:text-zinc-400">
+                    {project.description}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="grid gap-4">
+      <h2 class="font-medium text-lg tracking-tight">Education</h2>
+      <p
+        class="text-zinc-600 leading-relaxed transition-colors duration-300 dark:text-zinc-400"
+      >
+        I hold a B.Tech in Computer Science and Engineering from the National
+        Institute of Technology, Delhi (2020 – 2024).
+      </p>
+    </section>
+
+    <section class="grid gap-4">
+      <h2 class="font-medium text-lg tracking-tight">Stack</h2>
+
+      <div
+        class="flex flex-wrap gap-x-4 border-zinc-200 border-b transition-colors duration-300 dark:border-zinc-800"
+        role="tablist"
+      >
+        {
+          stackSections.map((section, index) => (
+            <button
+              aria-controls={`stack-panel-${section.heading}`}
+              aria-selected={index === 0 ? "true" : "false"}
+              class="-mb-px cursor-pointer border-transparent border-b pb-2 text-sm text-zinc-500 transition-colors duration-300 hover:text-black aria-selected:border-current aria-selected:text-black dark:aria-selected:text-white dark:hover:text-white"
+              data-stack-tab={section.heading}
+              id={`stack-tab-${section.heading}`}
+              role="tab"
+              type="button"
+            >
+              {section.heading}
+            </button>
+          ))
+        }
+      </div>
+
+      {
+        stackSections.map((section, index) => (
+          <ul
+            aria-labelledby={`stack-tab-${section.heading}`}
+            class="grid gap-3 text-sm"
+            data-stack-panel={section.heading}
+            hidden={index !== 0}
+            id={`stack-panel-${section.heading}`}
+            role="tabpanel"
+          >
+            {section.items.map((item) => (
+              <li class="flex items-baseline gap-2 leading-relaxed">
+                <a
+                  class="shrink-0 font-medium transition-colors duration-300 hover:text-zinc-500"
+                  href={item.url}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {item.name}
+                </a>
+                <span class="text-zinc-600 dark:text-zinc-400">
+                  {item.description}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </section>
+  </div>
+</Page>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-stack-tab]')];
+  const panels = [...document.querySelectorAll<HTMLElement>('[data-stack-panel]')];
+
+  for (const tab of tabs) {
+    tab.addEventListener("click", () => {
+      for (const other of tabs) {
+        other.setAttribute("aria-selected", String(other === tab));
+      }
+      for (const panel of panels) {
+        panel.hidden = panel.dataset.stackPanel !== tab.dataset.stackTab;
+      }
+    });
+  }
+</script>

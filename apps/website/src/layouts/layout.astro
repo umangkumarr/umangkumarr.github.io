@@ -1,0 +1,103 @@
+---
+import "@/styles/globals.css";
+import { identity, person } from "@/lib/person";
+import { url } from "@/lib/url";
+
+interface Props {
+  description?: string;
+  jsonLd?: Record<string, unknown>;
+  title?: string;
+}
+
+const defaultTitle = "Software development engineer | Umang Kumar";
+const defaultDescription =
+  "I build backend systems for commerce at scale — returns, logistics and rule engines at Meesho. Based in Bengaluru, India.";
+
+const {
+  description = defaultDescription,
+  jsonLd: jsonLdProp,
+  title = defaultTitle,
+} = Astro.props;
+
+// Strip the trailing slash (prerendered pages render as `/about/`) so the
+// canonical matches the sitemap, navigation and JSON-LD URLs.
+const pathname = Astro.url.pathname.replace(/\/+$/u, "") || "/";
+const canonical = new URL(pathname, url).toString();
+const ogImage = new URL("/opengraph-image.png", url).toString();
+
+// The homepage is the canonical identity URL: a ProfilePage wrapping the
+// Person. Subpages pass their own page-level node via the jsonLd prop.
+const jsonLd = jsonLdProp ?? {
+  "@context": "https://schema.org",
+  "@id": `${identity}/#profilepage`,
+  "@type": "ProfilePage",
+  description,
+  mainEntity: person,
+  name: title,
+  url: identity,
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script is:inline>
+      // Apply the stored (or system) theme before first paint.
+      (() => {
+        try {
+          const stored = localStorage.getItem("theme");
+          const dark =
+            stored === "dark" ||
+            (!stored &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+          document.documentElement.classList.toggle("dark", dark);
+        } catch {
+          /* no storage — stay light */
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Umang Kumar" />
+    <meta name="creator" content="Umang Kumar" />
+    <link href={identity} rel="author" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/icon.png" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content={title} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Umang Kumar" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content="Umang Kumar" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content="Umang Kumar" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline
+    ></script>
+  </head>
+  <body
+    class="font-sans antialiased min-h-dvh bg-background text-foreground -tracking-[0.01em] transition-colors duration-300"
+  >
+    <slot />
+  </body>
+</html>

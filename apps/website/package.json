@@ -1,0 +1,32 @@
+{
+  "name": "website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 3010",
+    "build": "astro build",
+    "preview": "astro preview",
+    "types": "astro check",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
+  },
+  "dependencies": {
+    "astro": "^7.1.1",
+    "cobe": "^0.6.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.5",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/bun": "^1.3.13",
+    "@types/node": "^25",
+    "tailwindcss": "^4",
+    "typescript": "^6"
+  },
+  "browserslist": [
+    "chrome >= 111",
+    "edge >= 111",
+    "firefox >= 111",
+    "safari >= 16.4"
+  ]
+}

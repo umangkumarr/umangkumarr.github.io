@@ -1,0 +1,413 @@
+---
+/**
+ * Decorative globe clock — a half-dial pinned to the left edge, opening
+ * rightward. Three rings (24h / 60m / 60s) rotate so the current time in IST
+ * sits highlighted at the 3-o'clock apex, around a slowly turning cobe globe.
+ *
+ * ≥1280px: fixed overlay in the left gutter beside the content column —
+ * pinned to the viewport, so it stays put while the page scrolls.
+ * Below that: an in-flow block at the top of the page.
+ */
+// Spread across longitudes so a few chips are always on the visible side
+// as the globe turns. Roughly half show at any moment.
+const cities = [
+  { name: "Bengaluru", country: "IN", lat: 12.97, lng: 77.59 },
+  { name: "New Delhi", country: "IN", lat: 28.61, lng: 77.21 },
+  { name: "Dubai", country: "AE", lat: 25.2, lng: 55.27 },
+  { name: "London", country: "GB", lat: 51.51, lng: -0.13 },
+  { name: "Paris", country: "FR", lat: 48.86, lng: 2.35 },
+  { name: "Cape Town", country: "ZA", lat: -33.92, lng: 18.42 },
+  { name: "São Paulo", country: "BR", lat: -23.55, lng: -46.63 },
+  { name: "New York", country: "US", lat: 40.71, lng: -74.01 },
+  { name: "San Francisco", country: "US", lat: 37.77, lng: -122.42 },
+  { name: "Tokyo", country: "JP", lat: 35.68, lng: 139.69 },
+  { name: "Singapore", country: "SG", lat: 1.35, lng: 103.82 },
+  { name: "Sydney", country: "AU", lat: -33.87, lng: 151.21 },
+];
+---
+
+<div
+  aria-hidden="true"
+  class="pointer-events-none relative h-[320px] w-full overflow-hidden sm:h-[380px] xl:fixed xl:inset-x-0 xl:top-0 xl:h-dvh"
+  data-globe-clock
+>
+  <canvas class="absolute inset-0" data-rings></canvas>
+  <canvas class="absolute opacity-90" data-globe></canvas>
+  {
+    cities.map((city) => (
+      <div
+        class="absolute top-0 left-0 will-change-transform"
+        data-city-chip
+        data-lat={city.lat}
+        data-lng={city.lng}
+        style="opacity: 0; visibility: hidden;"
+      >
+        <span class="-top-[2.5px] -left-[2.5px] absolute block size-[5px] rounded-full bg-zinc-900/70 transition-colors duration-300 dark:bg-white/70" />
+        <span class="-translate-x-1/2 absolute bottom-[9px] left-1/2 block whitespace-nowrap rounded-full border border-zinc-200 bg-[rgba(255,255,255,0.9)] px-2.5 py-1 text-[10px] text-zinc-600 transition-colors duration-300 dark:border-zinc-800 dark:bg-[rgba(20,22,25,0.9)] dark:text-zinc-400">
+          {city.name}
+          <span class="text-zinc-400 dark:text-zinc-600"> · {city.country}</span>
+        </span>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  import createGlobe from "cobe";
+
+  const TILT = 0.22;
+  const PHI_SPEED = 0.0016;
+  // In cobe's convention, a longitude λ sits at the front-center of the
+  // sphere when phi = 1.5π − λ·π/180. Our globe shows only the right half
+  // (center on the page's left edge), so push ~0.6 rad further to place
+  // Bengaluru (77.59°E) in the middle of the visible bulge.
+  const PHI_START = Math.PI * 1.5 - (77.59 * Math.PI) / 180 + 0.6;
+  // cobe renders the sphere at 80% of the canvas half-size.
+  const SPHERE_SCALE = 0.8;
+  // Width of the content column (max-w-2xl) — the overlay dial must fit in
+  // the gutter to its left.
+  const COLUMN_WIDTH = 672;
+  const TIME_ZONE = "Asia/Kolkata";
+
+  interface Geometry {
+    cx: number;
+    cy: number;
+    globeR: number;
+    gap: number;
+    rings: { r: number; count: number }[];
+    fontSize: number;
+  }
+
+  const isDark = () => document.documentElement.classList.contains("dark");
+
+  const getPalette = () =>
+    isDark()
+      ? {
+          accent: "#5b8cff",
+          dash: "rgba(232, 234, 237, 0.09)",
+          dot: "rgba(232, 234, 237, 0.32)",
+          globe: {
+            baseColor: [0.42, 0.45, 0.5] as [number, number, number],
+            dark: 1,
+            glowColor: [0.05, 0.055, 0.07] as [number, number, number],
+            mapBrightness: 3,
+          },
+          ring: "rgba(232, 234, 237, 0.13)",
+          text: (alpha: number) => `rgba(232, 234, 237, ${alpha})`,
+          textAlpha: 0.34,
+        }
+      : {
+          accent: "#3b5bdb",
+          dash: "rgba(24, 24, 27, 0.10)",
+          dot: "rgba(24, 24, 27, 0.35)",
+          globe: {
+            baseColor: [1, 1, 1] as [number, number, number],
+            dark: 0,
+            glowColor: [1, 1, 1] as [number, number, number],
+            mapBrightness: 6,
+          },
+          ring: "rgba(24, 24, 27, 0.16)",
+          text: (alpha: number) => `rgba(24, 24, 27, ${alpha})`,
+          textAlpha: 0.5,
+        };
+
+  const computeGeometry = (
+    w: number,
+    h: number,
+    overlay: boolean
+  ): Geometry => {
+    const rSeconds = overlay
+      ? Math.min(300, h / 2 - 24, Math.max((w - COLUMN_WIDTH) / 2 - 56, 180))
+      : Math.min(h / 2 - 24, w * 0.62);
+    const globeR = rSeconds * 0.44;
+    const gap = (rSeconds - globeR) / 3.2;
+    return {
+      cx: 0,
+      cy: h / 2,
+      fontSize: Math.round(Math.min(Math.max(gap * 0.23, 9), 13)),
+      gap,
+      globeR,
+      rings: [
+        { count: 24, r: globeR + gap * 1.2 }, // hours
+        { count: 60, r: globeR + gap * 2.2 }, // minutes
+        { count: 60, r: globeR + gap * 3.2 }, // seconds
+      ],
+    };
+  };
+
+  /** Offset between a time zone and UTC at the given instant. */
+  const tzOffsetMs = (timeZone: string, date: Date): number => {
+    const parts: Record<string, number> = {};
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      day: "2-digit",
+      hour: "2-digit",
+      hour12: false,
+      minute: "2-digit",
+      month: "2-digit",
+      second: "2-digit",
+      timeZone,
+      year: "numeric",
+    });
+    for (const { type, value } of dtf.formatToParts(date)) {
+      if (type !== "literal") {
+        parts[type] = Number(value);
+      }
+    }
+    const asUTC = Date.UTC(
+      parts.year,
+      parts.month - 1,
+      parts.day,
+      parts.hour % 24,
+      parts.minute,
+      parts.second
+    );
+    return asUTC - Math.floor(date.getTime() / 1000) * 1000;
+  };
+
+  /** Shortest signed distance from `current` to `target` on a ring of `n`. */
+  const wrapDelta = (target: number, current: number, n: number): number =>
+    ((target - current + n * 1.5) % n) - n / 2;
+
+  const container = document.querySelector<HTMLElement>("[data-globe-clock]");
+  const ringsCanvas = container?.querySelector<HTMLCanvasElement>(
+    "[data-rings]"
+  );
+  const globeCanvas = container?.querySelector<HTMLCanvasElement>(
+    "[data-globe]"
+  );
+  const ctx = ringsCanvas?.getContext("2d");
+
+  if (container && ringsCanvas && globeCanvas && ctx) {
+    const chips = [
+      ...container.querySelectorAll<HTMLElement>("[data-city-chip]"),
+    ].map((el) => ({
+      el,
+      lat: Number(el.dataset.lat),
+      lng: Number(el.dataset.lng),
+    }));
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const fontFamily = getComputedStyle(document.body).fontFamily;
+    const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    let palette = getPalette();
+    let geo = computeGeometry(
+      container.clientWidth,
+      container.clientHeight,
+      false
+    );
+    let globe: { destroy: () => void } | null = null;
+    let rafId = 0;
+    let resizeTimer = 0;
+    let visible = true;
+
+    // Smoothed ring positions (hours / minutes glide one notch on change).
+    let vHour: number | null = null;
+    let vMin: number | null = null;
+    let tzOffset = tzOffsetMs(TIME_ZONE, new Date());
+    let tzCheckedAt = Date.now();
+    let lastSecond = -1;
+
+    const phi = { current: PHI_START };
+
+    const layoutCanvases = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const position = getComputedStyle(container).position;
+      const overlay = position === "fixed" || position === "absolute";
+      geo = computeGeometry(w, h, overlay);
+
+      ringsCanvas.width = w * dpr;
+      ringsCanvas.height = h * dpr;
+      ringsCanvas.style.width = `${w}px`;
+      ringsCanvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const size = geo.globeR * 2;
+      globeCanvas.style.width = `${size}px`;
+      globeCanvas.style.height = `${size}px`;
+      globeCanvas.style.left = `${geo.cx - geo.globeR}px`;
+      globeCanvas.style.top = `${geo.cy - geo.globeR}px`;
+    };
+
+    const createGlobeInstance = () => {
+      globe?.destroy();
+      const size = geo.globeR * 2;
+      globe = createGlobe(globeCanvas, {
+        baseColor: palette.globe.baseColor,
+        dark: palette.globe.dark,
+        devicePixelRatio: dpr,
+        diffuse: 1.2,
+        glowColor: palette.globe.glowColor,
+        height: size * dpr,
+        mapBrightness: palette.globe.mapBrightness,
+        mapSamples: 20000,
+        markerColor: [0.36, 0.55, 1],
+        markers: chips.map((chip) => ({
+          location: [chip.lat, chip.lng],
+          size: 0.05,
+        })),
+        onRender: (state) => {
+          if (!reducedQuery.matches && visible) {
+            phi.current += PHI_SPEED;
+          }
+          state.phi = phi.current;
+        },
+        phi: PHI_START,
+        theta: TILT,
+        width: size * dpr,
+      });
+    };
+
+    const drawRing = (
+      r: number,
+      count: number,
+      value: number,
+      highlight: number
+    ) => {
+      const { cx, cy, gap, fontSize } = geo;
+
+      ctx.beginPath();
+      ctx.setLineDash([1.5, 6]);
+      ctx.strokeStyle = palette.dash;
+      ctx.lineWidth = 1;
+      ctx.arc(cx, cy, r - gap * 0.18, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      ctx.strokeStyle = palette.ring;
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const step = (Math.PI * 2) / count;
+      for (let k = 0; k < count; k++) {
+        // Apex points right (3 o'clock): the current value sits at angle 0.
+        const angle = (k - value) * step;
+        const cos = Math.cos(angle);
+        if (cos < -0.05) {
+          continue; // behind the left edge — nothing to draw
+        }
+        const sin = Math.sin(angle);
+        const isCurrent = k === highlight;
+
+        const dotSize = isCurrent ? 2.2 : k % 5 === 0 || count === 24 ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.fillStyle = isCurrent ? palette.accent : palette.dot;
+        ctx.arc(cx + cos * r, cy + sin * r, dotSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        const tr = r + gap * 0.34;
+        ctx.save();
+        ctx.translate(cx + cos * tr, cy + sin * tr);
+        ctx.rotate(angle + Math.PI / 2);
+        ctx.fillStyle = isCurrent
+          ? palette.accent
+          : palette.text(palette.textAlpha);
+        ctx.font = `${isCurrent ? 500 : 400} ${
+          fontSize + (isCurrent ? 1 : 0)
+        }px ${fontFamily}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(k), 0, 0);
+        ctx.restore();
+      }
+    };
+
+    // Mirrors cobe's own marker mapping: lat/lng → unit vector (with cobe's
+    // 180° longitude offset), rotated by its theta-then-phi matrix, projected
+    // orthographically onto a sphere occupying 80% of the canvas half-size.
+    const positionChips = () => {
+      const cT = Math.cos(TILT);
+      const sT = Math.sin(TILT);
+      const cP = Math.cos(phi.current);
+      const sP = Math.sin(phi.current);
+      const surface = geo.globeR * SPHERE_SCALE;
+      const tooSmall = geo.globeR < 75;
+      for (const chip of chips) {
+        if (tooSmall) {
+          chip.el.style.visibility = "hidden";
+          continue;
+        }
+        const lat = (chip.lat * Math.PI) / 180;
+        const lng = (chip.lng * Math.PI) / 180 - Math.PI;
+        const px = -Math.cos(lat) * Math.cos(lng);
+        const py = Math.sin(lat);
+        const pz = Math.cos(lat) * Math.sin(lng);
+        const x = cP * px + sP * pz;
+        const y = sP * sT * px + cT * py - cP * sT * pz;
+        const z = -sP * cT * px + sT * py + cP * cT * pz;
+        const opacity = Math.min(Math.max((z - 0.05) / 0.3, 0), 1);
+        chip.el.style.opacity = String(opacity);
+        chip.el.style.visibility = opacity === 0 ? "hidden" : "visible";
+        chip.el.style.transform = `translate(${geo.cx + x * surface}px, ${
+          geo.cy - y * surface
+        }px)`;
+      }
+    };
+
+    const frame = () => {
+      rafId = requestAnimationFrame(frame);
+
+      const nowMs = Date.now();
+      if (nowMs - tzCheckedAt > 60_000) {
+        tzOffset = tzOffsetMs(TIME_ZONE, new Date(nowMs));
+        tzCheckedAt = nowMs;
+      }
+      const t = nowMs + tzOffset;
+      const reduced = reducedQuery.matches;
+      const second = Math.floor(t / 1000) % 60;
+      const minute = Math.floor(t / 60_000) % 60;
+      const hour = Math.floor(t / 3_600_000) % 24;
+      const vSec = reduced ? second : second + (t % 1000) / 1000;
+
+      // In reduced motion, redraw only when the second ticks.
+      if (reduced && second === lastSecond) {
+        return;
+      }
+      lastSecond = second;
+
+      const ease = reduced ? 1 : 0.14;
+      vHour =
+        vHour === null ? hour : vHour + wrapDelta(hour, vHour, 24) * ease;
+      vMin =
+        vMin === null ? minute : vMin + wrapDelta(minute, vMin, 60) * ease;
+
+      ctx.clearRect(0, 0, container.clientWidth, container.clientHeight);
+      drawRing(geo.rings[0].r, 24, vHour, hour);
+      drawRing(geo.rings[1].r, 60, vMin, minute);
+      drawRing(geo.rings[2].r, 60, vSec, second);
+      positionChips();
+    };
+
+    layoutCanvases();
+    createGlobeInstance();
+    rafId = requestAnimationFrame(frame);
+
+    const resizeObserver = new ResizeObserver(() => {
+      layoutCanvases();
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(createGlobeInstance, 200);
+    });
+    resizeObserver.observe(container);
+
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      cancelAnimationFrame(rafId);
+      if (visible) {
+        rafId = requestAnimationFrame(frame);
+      }
+    });
+    intersectionObserver.observe(container);
+
+    // Re-skin when the theme switcher toggles the `dark` class.
+    const themeObserver = new MutationObserver(() => {
+      palette = getPalette();
+      createGlobeInstance();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributeFilter: ["class"],
+      attributes: true,
+    });
+  }
+</script>
