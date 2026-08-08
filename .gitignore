@@ -4,3 +4,8 @@ dist
 .vercel
 .turbo
 .DS_Store
+
+# injected by work-machine git templates — never commit
+.pre-commit-config.yaml
+pre-commit-scripts/
+post-commit-scripts/
