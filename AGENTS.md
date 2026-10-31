@@ -49,8 +49,8 @@ bun run build               # in apps/website — static output in dist/
 
 ## Gotchas
 
-- The lifeline shows an age per year computed from `birthYear` in
-  `lib/umang.ts` — currently an assumption (2002) awaiting the real value.
+- The lifeline shows an age per year computed from `birthYear` (2003) in
+  `lib/umang.ts`.
 - The Söhne fonts in `apps/website/public/fonts` are commercially licensed
   to the original site author — replace before this repo/site goes public.
 - The lifeline renderer is ported from evilrabbit/lifeline (MIT); keep the

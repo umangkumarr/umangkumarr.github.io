@@ -28,6 +28,12 @@ export const stack: StackItem[] = [
   },
   {
     category: "Languages",
+    description: "Where it all started — close to the metal.",
+    name: "C",
+    url: "https://en.cppreference.com/w/c",
+  },
+  {
+    category: "Languages",
     description: "Scripts, analysis and ML experiments.",
     name: "Python",
     url: "https://www.python.org",

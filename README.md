@@ -26,8 +26,7 @@ bun run dev        # website on http://localhost:3010
 | Social icons in the footer | `apps/website/src/components/social-links.astro` |
 | Globe clock (cities, time zone, colors) | `apps/website/src/components/globe-clock.astro` |
 
-> **TODO for Umang:** `birthYear` in `lib/umang.ts` is assumed (2002) — set the
-> real one. Update `identity` in `lib/person.ts` when the final domain is
+> **TODO for Umang:** Update `identity` in `lib/person.ts` when the final domain is
 > chosen. The `Soehne` fonts in `public/fonts` are commercially licensed to the
 > original author — swap them (e.g. for Inter) before publishing.
 > (`public/photo-3x4.jpg` is the real photo with a dark-theme grade; the
