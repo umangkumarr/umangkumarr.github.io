@@ -5,15 +5,13 @@ import { defineLifeline } from "./lifeline/define";
  * - `companies`: ids with a mark in company-icon.astro render the logo;
  *   anything else falls back to an initial in a ring (meesho, k2q do this).
  * - Events can be plain strings or segment arrays with links, as below.
- *
- * NOTE: birthYear is an assumption (B.Tech started Dec 2020) — correct it!
  */
 const record = defineLifeline({
-  birthYear: 2002,
+  birthYear: 2003,
   description:
     "The life and career of Umang Kumar — from NIT Delhi to building commerce systems at Meesho.",
   milestones: {
-    2002: {
+    2003: {
       events: ["I was born in India."],
       id: "born",
     },

@@ -29,8 +29,8 @@ const stackSections = categories
   }))
   .filter((section) => section.items.length > 0);
 
-// Hidden for now — flip to true to show the Projects section again.
-const SHOW_PROJECTS = false;
+// Flip to false to hide the Projects section.
+const SHOW_PROJECTS = true;
 
 const projects = [
   {
@@ -159,7 +159,11 @@ const projects = [
               latency within SLA. Delivered upfront delivery dates for exchange
               orders through a low-latency API with graceful fallback, and
               re-architected the legacy returns approval workflow into a new
-              service with modular boundaries and idempotent processing.
+              service with modular boundaries and idempotent processing. Also
+              redesigned the branded-packaging scan flow with soft and hard
+              failure modes so suppliers keep operating through packaging-service
+              downtime, and added a backend decision layer for returns
+              cancellation requests that fixed a critical app bug.
             </p>
           </div>
         </div>
@@ -185,7 +189,9 @@ const projects = [
             >
               Built the branded-packaging relinking feature from scratch — now
               serving 15% of BP requests — streamlined vendor onboarding to
-              need zero code changes, and raised unit-test coverage by 40%.
+              need zero code changes, raised unit-test coverage by 40%, and
+              refactored the codebase around design patterns with sturdier
+              exception handling across API response statuses.
             </p>
           </div>
         </div>
